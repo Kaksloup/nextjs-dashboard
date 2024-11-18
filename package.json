@@ -10,9 +10,12 @@
     "test": "start-server-and-test dev http://localhost:3000 'playwright test --trace on'"
   },
   "dependencies": {
+    "@azure/monitor-opentelemetry-exporter": "^1.0.0-beta.27",
     "@heroicons/react": "^2.1.4",
+    "@opentelemetry/api": "^1.9.0",
     "@playwright/test": "^1.47.2",
     "@tailwindcss/forms": "^0.5.7",
+    "@vercel/otel": "^1.10.0",
     "@vercel/postgres": "^0.10.0",
     "autoprefixer": "10.4.19",
     "bcrypt": "^5.1.1",

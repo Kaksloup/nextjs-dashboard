@@ -6,6 +6,8 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { signIn } from '@/auth';
 import { AuthError } from 'next-auth';
+import { trace } from '@opentelemetry/api';
+
 
 const FormSchema = z.object({
   id: z.string(),
@@ -33,7 +35,13 @@ export type State = {
   message?: string | null;
 };
 
+const tracer = trace.getTracer('gestion-factures');
+
 export async function createInvoice(prevState: State, formData: FormData) {
+  const span = tracer.startSpan('createInvoice', {
+    attributes: { action: 'create', component: 'invoice' },
+  });
+
   // Validate form fields using Zod
   const validatedFields = CreateInvoice.safeParse({
     customerId: formData.get('customerId'),
@@ -43,6 +51,7 @@ export async function createInvoice(prevState: State, formData: FormData) {
 
   // If form validation fails, return errors early. Otherwise, continue.
   if (!validatedFields.success) {
+    span.setStatus({ code: 2, message: 'Validation Error' });
     return {
       errors: validatedFields.error.flatten().fieldErrors,
       message: 'Missing Fields. Failed to Create Invoice.',
@@ -60,6 +69,8 @@ export async function createInvoice(prevState: State, formData: FormData) {
       INSERT INTO invoices (customer_id, amount, status, date)
       VALUES (${customerId}, ${amountInCents}, ${status}, ${date})
     `;
+    span.setStatus({ code: 1, message: 'Invoice Created' });
+    span.end();
   } catch (error) {
     // If a database error occurs, return a more specific error.
     return {
